@@ -1,7 +1,4 @@
 import Sidebar from "../components/Sidebar";
-import NewPost from "../components/NewPost";
-import React from "react";
-
 import Navbar from "../components/Navbar";
 import NotificationsComment from "../components/NotificationsPost";
 

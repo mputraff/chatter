@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import EmojiPicker from "emoji-picker-react";
 import { useUser } from '../UserContext'; 
 import { usePosts } from '../PostsContext';

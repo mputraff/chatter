@@ -11,7 +11,7 @@ export default function Register() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
 
     try {

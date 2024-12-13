@@ -1,6 +1,6 @@
-import News from "../pages/News";
+import News from "./News";
 import NewPost from "../components/NewPost";
-import Post from "../pages/Post";
+import Post from "./Post";
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";

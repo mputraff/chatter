@@ -1,11 +1,11 @@
 import Sidebar from "../components/Sidebar";
-import News from "../pages/News";
+import News from "./News";
 import NewPost from "../components/NewPost";
-import Post from "../pages/Post";
+import Post from "./Post";
 import React from "react";
 import { useState } from "react";
 import Navbar from "../components/Navbar";
-import People from "../pages/People";
+import People from "./People";
 
 export default function Home() {
   const [showPost, setShowPost] = useState(false);

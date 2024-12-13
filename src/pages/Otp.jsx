@@ -18,7 +18,7 @@ export default function Otp() {
     }
   }, [navigate]);
 
-  const handleOtp = async (e: React.FormEvent) => {
+  const handleOtp = async (e) => {
     e.preventDefault();
 
     try {

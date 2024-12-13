@@ -1,12 +1,27 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, ReactNode } from 'react';
 
-const PostsContext = createContext();
+// Definisikan tipe untuk post
+interface Post {
+  id: string; // Misalnya, ID post
+  content: string; // Konten post
+  // Tambahkan properti lain sesuai kebutuhan
+}
 
-export const PostsProvider = ({ children }) => {
-  const [posts, setPosts] = useState([]);
+// Definisikan tipe untuk konteks post
+interface PostsContextType {
+  posts: Post[]; // Array of posts
+  addPost: (newPost: Post) => void; // Fungsi untuk menambah post
+}
 
-  const addPost = (newPost) => {
-    setPosts((prevPosts) => [...prevPosts, newPost]);
+// Buat konteks dengan nilai default undefined
+const PostsContext = createContext<PostsContextType | undefined>(undefined);
+
+// Komponen provider untuk posts
+export const PostsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [posts, setPosts] = useState<Post[]>([]); // State untuk menyimpan posts
+
+  const addPost = (newPost: Post) => {
+    setPosts((prevPosts) => [...prevPosts, newPost]); // Menambah post baru
   };
 
   return (
@@ -16,4 +31,11 @@ export const PostsProvider = ({ children }) => {
   );
 };
 
-export const usePosts = () => useContext(PostsContext);
+// Hook untuk menggunakan PostsContext
+export const usePosts = () => {
+  const context = useContext(PostsContext);
+  if (!context) {
+    throw new Error('usePosts must be used within a PostsProvider');
+  }
+  return context;
+};
