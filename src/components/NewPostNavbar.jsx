@@ -3,7 +3,7 @@ import EmojiPicker from "emoji-picker-react";
 import { useUser } from '../UserContext';
 import { usePosts } from '../PostsContext';
 
-export default function NewPost() {
+export default function NewPostNavbar() {
   const { user } = useUser();
   const { addPost } = usePosts();
   const [fileImage, setFileImage] = useState(null);

@@ -15,7 +15,7 @@ function App() {
   return (
     <UserProvider>
       <PostsProvider>
-        <CommentsProvider> {/* Wrap with CommentsProvider */}
+        <CommentsProvider> 
           <Router>
             <Routes>
               <Route path="/" element={<Login />} />

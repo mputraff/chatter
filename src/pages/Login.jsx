@@ -14,26 +14,37 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
+    
     try {
-      const response = await axios.post(
-        "https://api-chatter-tau.vercel.app/api/auth/login",
-        { email, password },
-        { headers: { "Content-Type": "application/json" } }
-      );
-
-      console.log("Login success: ", response.data);
-
-      // Simpan token dan data pengguna ke localStorage
-      localStorage.setItem("token", response.data.token);
-      setUser(response.data.data); // Pastikan ini mengarah ke data yang benar
-
-      // Navigasi ke halaman utama
-      navigate("/home");
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        setError(error.response?.data?.message || "Login failed");
+      const response = await fetch('https://api-chatter-tau.vercel.app/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+  
+      const result = await response.json();
+  
+      if (response.ok) {
+        // Simpan user data beserta token
+        setUser({
+          id: result.data.id,
+          name: result.data.name,
+          email: result.data.email,
+          profile_picture: result.data.profile_picture,
+          header_picture: result.data.header_picture,
+          token: result.token  // Pastikan token disimpan
+        });
+        
+        // Redirect ke halaman utama
+        navigate('/home');
+      } else {
+        setError(result.message);
       }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('Terjadi kesalahan saat login');
     }
   };
   

@@ -1,6 +1,7 @@
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import NotificationsComment from "../components/NotificationsPost";
+import NewPost from "../components/NewPost";
 
 export default function Notifications() {
   return (

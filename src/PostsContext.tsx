@@ -1,37 +1,48 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect,  ReactNode } from 'react';
+import axios from 'axios'; // Pastikan Anda menginstal axios
 
 // Definisikan tipe untuk post
 interface Post {
-  id: string; // Misalnya, ID post
-  content: string; // Konten post
+  id: string;
+  content: string;
   // Tambahkan properti lain sesuai kebutuhan
 }
 
-// Definisikan tipe untuk konteks post
 interface PostsContextType {
-  posts: Post[]; // Array of posts
-  addPost: (newPost: Post) => void; // Fungsi untuk menambah post
+  posts: Post[];
+  addPost: (newPost: Post) => void;
+  fetchPosts: () => void; // Tambahkan fungsi untuk mengambil postingan
 }
 
-// Buat konteks dengan nilai default undefined
 const PostsContext = createContext<PostsContextType | undefined>(undefined);
 
-// Komponen provider untuk posts
 export const PostsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [posts, setPosts] = useState<Post[]>([]); // State untuk menyimpan posts
+  const [posts, setPosts] = useState<Post[]>([]);
 
-  const addPost = (newPost: Post) => {
-    setPosts((prevPosts) => [...prevPosts, newPost]); // Menambah post baru
+  const fetchPosts = async () => {
+    try {
+      const response = await axios.get('https://api-chatter-tau.vercel.app/api/auth/posts'); // Ganti dengan URL endpoint Anda
+      setPosts(response.data.data); // Sesuaikan dengan struktur respons Anda
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    }
   };
 
+  const addPost = (newPost: Post) => {
+    setPosts((prevPosts) => [...prevPosts, newPost]);
+  };
+
+  useEffect(() => {
+    fetchPosts(); // Ambil postingan saat komponen dimuat
+  }, []);
+
   return (
-    <PostsContext.Provider value={{ posts, addPost }}>
+    <PostsContext.Provider value={{ posts, addPost, fetchPosts }}>
       {children}
     </PostsContext.Provider>
   );
 };
 
-// Hook untuk menggunakan PostsContext
 export const usePosts = () => {
   const context = useContext(PostsContext);
   if (!context) {
