@@ -102,7 +102,6 @@ export default function NewPost() {
       resetForm();
       alert("Post berhasil dibuat!");
 
-      window.location.reload();
     } catch (error) {
       console.error("Error saat membuat post:", error);
       alert(error.message || "Terjadi kesalahan saat membuat post");
