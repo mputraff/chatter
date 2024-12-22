@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy : {
-      '/api': 'https://chatter-api.vercel.app',
+      '/api': 'https://api-chatter-tau.vercel.app/api/auth',
     }
   }
 })

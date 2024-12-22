@@ -73,7 +73,7 @@ export default function NewPost() {
         formData.append('media', fileImage);
       }
 
-      const response = await fetch('https://api-chatter-tau.vercel.app/api/auth/create-post', {
+      const response = await fetch('http://localhost:3000/api/auth/create-post', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${user.token}`
