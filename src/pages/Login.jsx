@@ -35,7 +35,8 @@ export default function Login() {
           email: result.data.email,
           profile_picture: result.data.profile_picture,
           header_picture: result.data.header_picture,
-          token: result.token  // Pastikan token disimpan
+          created_at: result.data.created_at,
+          token: result.token  
         });
         
         // Redirect ke halaman utama

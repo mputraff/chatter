@@ -90,14 +90,13 @@ export default function NewPostNavbar() {
       addPost({
         id: data.data.id,
         content: data.data.content,
-        image: data.data.media_url,
-        timestamp: new Date().toISOString(),
-        user: {
-          id: user.id,
-          name: user.name,
-          profile_picture: user.profile_picture
-        },
-      });
+        media_url: data.data.media_url,
+        user_name: user.name,
+        user_id: user.id,
+        profile_picture: user.profile_picture,
+        created_at: new Date().toISOString(),
+        likes: 0
+      });;
 
       resetForm();
       alert("Post berhasil dibuat!");

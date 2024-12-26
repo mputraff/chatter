@@ -1,17 +1,23 @@
 import React, { createContext, useState, useContext, useEffect,  ReactNode } from 'react';
 import axios from 'axios'; // Pastikan Anda menginstal axios
 
-// Definisikan tipe untuk post
 interface Post {
   id: string;
   content: string;
-  // Tambahkan properti lain sesuai kebutuhan
+  media_url?: string;
+  user_name: string;
+  user_id: string;
+  profile_picture?: string;
+  created_at: string;
+  likes: number;
+  isLiked?: boolean;
 }
 
 interface PostsContextType {
   posts: Post[];
   addPost: (newPost: Post) => void;
-  fetchPosts: () => void; // Tambahkan fungsi untuk mengambil postingan
+  updatePost: (updatedPost: Post) => void;
+  fetchPosts: () => void;
 }
 
 const PostsContext = createContext<PostsContextType | undefined>(undefined);
@@ -29,15 +35,23 @@ export const PostsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const addPost = (newPost: Post) => {
-    setPosts((prevPosts) => [...prevPosts, newPost]);
+    setPosts((prevPosts) => [newPost, ...prevPosts]);
+  };
+
+  const updatePost = (updatedPost: Post) => {
+    setPosts(prevPosts => 
+      prevPosts.map(post => 
+        post.id === updatedPost.id ? updatedPost : post
+      )
+    );
   };
 
   useEffect(() => {
-    fetchPosts(); // Ambil postingan saat komponen dimuat
+    fetchPosts(); 
   }, []);
 
   return (
-    <PostsContext.Provider value={{ posts, addPost, fetchPosts }}>
+    <PostsContext.Provider value={{ posts, addPost, updatePost, fetchPosts }}>
       {children}
     </PostsContext.Provider>
   );

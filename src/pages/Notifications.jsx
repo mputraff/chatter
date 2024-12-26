@@ -1,13 +1,45 @@
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
-import NotificationsComment from "../components/NotificationsPost";
+import NotificationsPost from "../components/NotificationsPost.jsx";
 import NewPost from "../components/NewPost";
+import { useUser } from '../UserContext';
+import { useEffect, useState } from "react";
 
 export default function Notifications() {
+  const { user } = useUser();
+  const [notification, setNotification] = useState([]); // Corrected line
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch('https://api-chatter-tau.vercel.app/api/auth/notifications', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user.token}`
+          },
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to fetch notifications');
+        }
+
+        setNotification(data.data);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+
+    if (user?.token) {
+      fetchNotifications();
+    }
+  }, [user]);
+
   return (
     <>
       <section className="h-screen bg-gray-950 scrollbar-hide overflow-auto">
-        <Navbar onClick={() => {}} />
+        <Navbar onClick={() => { }} />
         <div className="h-screen flex gap-2 max-lg:gap-0 justify-center">
           <div className="flex flex-col max-md:hidden w-1/5 max-md:w-full max-lg:w-6/12 xl:mt-3">
             <div className="py-3 px-4 text-white flex bg-gray-900 rounded-lg">
@@ -30,15 +62,16 @@ export default function Notifications() {
               </button>
             </div>
 
-            <div className="overflow-auto scrollbar-hide ">
-              <NotificationsComment />
-              <NotificationsComment />
-              <NotificationsComment />
-              <NotificationsComment />
-              <NotificationsComment />
-              <NotificationsComment />
+            <div className="overflow-auto scrollbar-hide">
+              {notification.length > 0 ? (
+                notification.map((notif) => (
+                  <NotificationsPost key={notif.id} notification={notif} />
+                ))
+              ) : (
+                <p className="text-white">You don't have any notifications yet.</p>
+              )}
             </div>
-            
+
           </div>
 
           {/* Sidebar */}

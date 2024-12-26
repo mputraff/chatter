@@ -1,14 +1,51 @@
 import React, { useState } from "react";
 import CommentPost from "./CommentPost";
 import { useUser } from "../UserContext";
+import { usePosts } from "../PostsContext";
+
 
 export default function CardPost({ post }) {
   const { user } = useUser();
+  const { addPost, updatePost } = usePosts();
   const [showComment, setShowComment] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.likes || 0);
+
+  const handleLike = async () => {
+    try {
+      const response = await fetch('https://api-chatter-tau.vercel.app/api/auth/like-post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({ post_id: post.id }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to like post');
+      }
+
+      setIsLiked(data.liked);
+      setLikeCount(data.likeCount);
+      
+      // Update post in context
+      updatePost({ 
+        ...post, 
+        likes: data.likeCount,
+        isLiked: data.liked 
+      });
+    } catch (error) {
+      console.error("Error liking post:", error);
+      alert(error.message || "An error occurred while liking the post");
+    }
+  }
 
   const handleShowComment = () => {
     setShowComment(!showComment);
   };
+
 
   const timeAgo = (timestamp) => {
     const now = new Date();
@@ -76,7 +113,7 @@ export default function CardPost({ post }) {
 
       {/* Actions */}
       <div className="flex mt-2 gap-3 px-4 py-2">
-        <button className="flex items-center text-lg text-gray-600 gap-2 hover:text-white">
+        <button onClick={handleLike} className="flex items-center text-lg text-gray-600 gap-2 hover:text-white">
           <i className="fa-solid fa-heart text-xl"></i>
           <p className="text-xl">{post.likes || 0}</p>
         </button>

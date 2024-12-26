@@ -2,18 +2,17 @@ import { Link, useNavigate } from "react-router-dom";
 import imgLogo from "../assets/img/LogoChatter.png";
 import { useUser } from "../UserContext";
 import { useState } from "react";
+import axios from "axios";
 
 export default function EditProfile() {
-  const { user, setUser } = useUser(); // Access user and setUser from context
+  const { user, setUser } = useUser(); 
   const navigate = useNavigate();
-
-  // State untuk menyimpan input
-  const [displayId, setDisplayId] = useState(user ? user.id : "");
-  const [displayName, setDisplayName] = useState(user ? user.name : "");
+  const [id, setid] = useState(user ? user.id : "");
+  const [name, setName] = useState(user ? user.name : "");
   const [password, setPassword] = useState("");
   const [profilePicture, setProfilePicture] = useState(null);
   const [headerPicture, setHeaderPicture] = useState(null);
-  const [error, setError] = useState(""); // State for error messages
+  const [error, setError] = useState(""); 
 
   const handleLogout = () => {
     console.log("Logging out...");
@@ -24,48 +23,51 @@ export default function EditProfile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    const formData = new FormData();
-    formData.append("id", displayId);
-    formData.append("name", displayName);
-    formData.append("password", password);
-    if (profilePicture) {
-      formData.append("profile_picture", profilePicture);
+
+    if (!user || !user.token) {
+      setError("User not authenticated. Please login again.");
+      navigate("/login");
+      return;
     }
-    if (headerPicture) {
-      formData.append("header_picture", headerPicture);
-    }
-  
-    // Log FormData
-    for (const [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
-  
+
     try {
-      const response = await fetch("https://api-chatter-tau.vercel.app/api/auth/edit-profile", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: formData,
-      });      
-  
-      if (response.ok) {
-        const updatedUser = await response.json();
-        console.log("Updated User:", updatedUser);
-        setUser(updatedUser.data); // Ensure this matches the response structure
-        navigate("/profile");
-      } else {
-        const errorData = await response.json();
-        console.error("Error updating profile:", errorData);
-        setError(errorData.error || "Failed to update profile"); // Set error message
+      const formData = new FormData();
+      if (name) formData.append("name", name);
+      if (password) formData.append("password", password);
+      if (profilePicture) formData.append("profile_picture", profilePicture);
+      if (headerPicture) formData.append("header_picture", headerPicture);
+
+      const response = await axios.put(
+        "https://api-chatter-tau.vercel.app/api/auth/edit-profile",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${user.token}`, // Sertakan token
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        alert("Profil berhasil diperbarui.");
+        // Update user context dengan data terbaru
+        setUser({
+          ...user,
+          name: name || user.name,
+          profile_picture: response.data.updatedFields?.profile_picture || user.profile_picture,
+          header_picture: response.data.updatedFields?.header_picture || user.header_picture,
+        });
+
+        navigate("/"); // Redirect ke halaman profil
       }
     } catch (error) {
-      console.error("Error:", error);
-      setError("An error occurred while updating the profile."); // Set error message
+      console.error("Error updating profile:", error);
+      setError(
+        error.response?.data?.error || "Terjadi kesalahan saat memperbarui profil."
+      );
     }
   };
-  
+
 
   return (
     <section className="h-screen bg-gray-950 flex items-center justify-center">
@@ -96,28 +98,26 @@ export default function EditProfile() {
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             {/* Id User */}
             <div>
-              <label className="text-gray-300" htmlFor="displayId">
+              <label className="text-gray-300">
                 Id
               </label>
               <input
                 type="text"
-                id="displayId"
-                value={displayId}
-                onChange={(e) => setDisplayId(e.target.value)}
+                value={id}
+                onChange={(e) => setid(e.target.value)}
                 className="w-full p-2 rounded bg-gray-700 text-white outline-none focus:placeholder:text-gray-500"
                 placeholder="Your id"
               />
             </div>
             {/* Display Name */}
             <div>
-              <label className="text-gray-300" htmlFor="displayName">
+              <label className="text-gray-300">
                 Display Name
               </label>
               <input
                 type="text"
-                id="displayName"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full p-2 rounded bg-gray-700 text-white outline-none focus:placeholder:text-gray-500"
                 placeholder="Your full name or fun name"
               />
