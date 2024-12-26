@@ -54,6 +54,7 @@ export default function EditProfile() {
         // Update user context dengan data terbaru
         setUser({
           ...user,
+          id : id || user.id,
           name: name || user.name,
           profile_picture: response.data.updatedFields?.profile_picture || user.profile_picture,
           header_picture: response.data.updatedFields?.header_picture || user.header_picture,
