@@ -5,14 +5,14 @@ import { useState } from "react";
 import axios from "axios";
 
 export default function EditProfile() {
-  const { user, setUser } = useUser(); 
+  const { user, setUser } = useUser();
   const navigate = useNavigate();
-  const [id, setid] = useState(user ? user.id : "");
-  const [name, setName] = useState(user ? user.name : "");
+  const [id, setId] = useState(user?.id || "");
+  const [name, setName] = useState(user?.name || "");
   const [password, setPassword] = useState("");
   const [profilePicture, setProfilePicture] = useState(null);
   const [headerPicture, setHeaderPicture] = useState(null);
-  const [error, setError] = useState(""); 
+  const [error, setError] = useState("");
 
   const handleLogout = () => {
     console.log("Logging out...");
@@ -23,8 +23,8 @@ export default function EditProfile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!user || !user.token) {
+    
+    if (!user?.token) {
       setError("User not authenticated. Please login again.");
       navigate("/login");
       return;
@@ -32,7 +32,7 @@ export default function EditProfile() {
 
     try {
       const formData = new FormData();
-      if (id) formData.append("id", id);
+      if (id && id !== user.id) formData.append("id", id);
       if (name) formData.append("name", name);
       if (password) formData.append("password", password);
       if (profilePicture) formData.append("profile_picture", profilePicture);
@@ -43,29 +43,29 @@ export default function EditProfile() {
         formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${user.token}`, // Sertakan token
+            Authorization: `Bearer ${user.token}`,
           },
         }
       );
 
-      if (response.status === 200) {
-        alert("Profil berhasil diperbarui.");
-        // Update user context dengan data terbaru
-        setUser({
-          ...user,
-          id : id || user.id,
-          name: name || user.name,
-          profile_picture: response.data.updatedFields?.profile_picture || user.profile_picture,
-          header_picture: response.data.updatedFields?.header_picture || user.header_picture,
-        });
+      const updatedFields = response.data.updatedFields;
 
-        navigate("/"); // Redirect ke halaman profil
-      }
+      // Update user context with new data
+      setUser({
+        ...user,
+        id: updatedFields.id || user.id,
+        name: updatedFields.name || user.name,
+        profile_picture: updatedFields.profile_picture || user.profile_picture,
+        header_picture: updatedFields.header_picture || user.header_picture,
+      });
+
+      alert("Profile updated successfully!");
+      navigate("/");
     } catch (error) {
       console.error("Error updating profile:", error);
       setError(
-        error.response?.data?.error || "Terjadi kesalahan saat memperbarui profil."
+        error.response?.data?.error || 
+        "An error occurred while updating the profile."
       );
     }
   };
@@ -106,7 +106,7 @@ export default function EditProfile() {
               <input
                 type="text"
                 value={id}
-                onChange={(e) => setid(e.target.value)}
+                onChange={(e) => setId(e.target.value)}
                 className="w-full p-2 rounded bg-gray-700 text-white outline-none focus:placeholder:text-gray-500"
                 placeholder="Your id"
               />
