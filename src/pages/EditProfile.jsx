@@ -32,6 +32,7 @@ export default function EditProfile() {
 
     try {
       const formData = new FormData();
+      if (id) formData.append("id", id);
       if (name) formData.append("name", name);
       if (password) formData.append("password", password);
       if (profilePicture) formData.append("profile_picture", profilePicture);
