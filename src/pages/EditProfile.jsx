@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import imgLogo from "../assets/img/LogoChatter.png";
 import { useUser } from "../UserContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function EditProfile() {
@@ -14,6 +14,16 @@ export default function EditProfile() {
   const [headerPicture, setHeaderPicture] = useState(null);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    if (user) {
+      setId(user.id || "");
+      setName(user.name || "");
+    } else {
+      // Jika user tidak ada, redirect ke halaman login
+      navigate("/login");
+    }
+  }, [user, navigate]);
+
   const handleLogout = () => {
     console.log("Logging out...");
     localStorage.removeItem("token");
@@ -23,53 +33,73 @@ export default function EditProfile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!user?.token) {
+  
+    // Pastikan user dan token tersedia
+    if (!user || !user.token) {
       setError("User not authenticated. Please login again.");
       navigate("/login");
       return;
     }
-
+  
+    // Validasi tipe file
+    if (
+      profilePicture &&
+      !["image/png", "image/jpeg", "image/gif", "image/webp"].includes(profilePicture.type)
+    ) {
+      setError("Invalid file type for profile picture.");
+      return;
+    }
+  
+    if (
+      headerPicture &&
+      !["image/png", "image/jpeg", "image/gif", "image/webp"].includes(headerPicture.type)
+    ) {
+      setError("Invalid file type for header picture.");
+      return;
+    }
+  
     try {
       const formData = new FormData();
-      if (id && id !== user.id) formData.append("id", id);
-      if (name) formData.append("name", name);
+      
+      // Hanya tambahkan field yang diubah
+      if (id !== user.id) formData.append("id", id);
+      if (name !== user.name) formData.append("name", name);
       if (password) formData.append("password", password);
       if (profilePicture) formData.append("profile_picture", profilePicture);
       if (headerPicture) formData.append("header_picture", headerPicture);
-
+  
       const response = await axios.put(
         "https://api-chatter-tau.vercel.app/api/auth/edit-profile",
         formData,
         {
           headers: {
             Authorization: `Bearer ${user.token}`,
+            "Content-Type": "multipart/form-data",
           },
         }
       );
-
-      const updatedFields = response.data.updatedFields;
-
-      // Update user context with new data
-      setUser({
-        ...user,
-        id: updatedFields.id || user.id,
-        name: updatedFields.name || user.name,
-        profile_picture: updatedFields.profile_picture || user.profile_picture,
-        header_picture: updatedFields.header_picture || user.header_picture,
-      });
-
+  
+      // Update user context dengan data dari response
+      setUser(prevUser => ({
+        ...prevUser,
+        ...(response.data.data || {}),
+        token: response.data.token || prevUser.token
+      }));
+  
       alert("Profile updated successfully!");
       navigate("/");
     } catch (error) {
       console.error("Error updating profile:", error);
       setError(
-        error.response?.data?.error || 
-        "An error occurred while updating the profile."
+        error.response?.data?.error || "An error occurred while updating the profile."
       );
     }
   };
 
+  // Render hanya jika user ada
+  if (!user) {
+    return null;
+  }
 
   return (
     <section className="h-screen bg-gray-950 flex items-center justify-center">

@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CommentPost from "./CommentPost";
 import { useUser } from "../UserContext";
 import { usePosts } from "../PostsContext";
-
+import axios from "axios";
 
 export default function CardPost({ post }) {
   const { user } = useUser();
@@ -10,6 +10,27 @@ export default function CardPost({ post }) {
   const [showComment, setShowComment] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likes || 0);
+  const [commentCount, setCommentCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCommentCount = async () => {
+      try {
+        const response = await axios.get(
+          `https://api-chatter-tau.vercel.app/api/auth/comment/${post.id}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${user.token}`
+            }
+          }
+        );
+        setCommentCount(response.data.data.length);
+      } catch (error) {
+        console.error("Error fetching comment count:", error);
+      }
+    };
+  
+    fetchCommentCount();
+  }, [post.id, user]);
 
   const handleLike = async () => {
     try {
@@ -122,7 +143,7 @@ export default function CardPost({ post }) {
           className="flex items-center text-lg text-gray-600 gap-2 hover:text-white"
         >
           <i className="fa-regular fa-comment text-xl"></i>
-          <p className="text-xl">{post.comments?.length || 0}</p>
+          <p className="text-xl">{commentCount}</p>
         </button>
       </div>
 

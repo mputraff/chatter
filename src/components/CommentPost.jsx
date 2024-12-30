@@ -1,37 +1,74 @@
 import { useState, useEffect } from "react";
-import { useComments } from "../CommentsContext"; // Import CommentsContext
-import { useUser } from '../UserContext'; 
+import { useUser } from '../UserContext';
 import axios from "axios";
 
-export default function CommentPost({ postId }) { // Ensure postId is passed as a prop
-  const { comments, addComment } = useComments(); // Get comments and addComment from contex
-  const { user } = useUser(); 
+export default function CommentPost({ postId }) {
+
+  const { user } = useUser();
   const [commentContent, setCommentContent] = useState("");
+  const [comments, setComments] = useState([]);
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchComments = async () => {
       try {
-        const response = await axios.get("https://api-chatter-tau.vercel.app/api/auth/users");
-        if (response.data && response.data.users.length > 0) {
-          setUser(response.data.users[0]);
-        }
+        const response = await axios.get(
+          `https://api-chatter-tau.vercel.app/api/auth/comment/${postId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${user.token}`
+            }
+          }
+        );
+        setComments(response.data.data);
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("Error fetching comments:", error);
       }
     };
 
-    fetchUserData();
-  }, []);
+    fetchComments();
+  }, [postId, user]);
 
-  const handleCommentSubmit = () => {
-    if (commentContent.trim()) {
-      const newComment = {
-        content: commentContent,
-        user: user,
-        timestamp: new Date().toISOString(),
-      };
-      addComment(postId, newComment); // Add comment to the context
-      setCommentContent(""); // Clear the input
+  const handleCommentSubmit = async () => {
+    if (!commentContent.trim()) return;
+
+    try {
+      const response = await axios.post(
+        'https://api-chatter-tau.vercel.app/api/auth/create-comment',
+        {
+          post_id: postId,
+          content: commentContent
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user.token}`
+          }
+        }
+      );
+
+      // Add the new comment to the list
+      const newComment = response.data.data;
+      setComments([...comments, newComment]);
+      setCommentContent(""); // Clear input
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      alert(error.response?.data?.error || "Failed to post comment");
+    }
+  };
+
+  const timeAgo = (timestamp) => {
+    const now = new Date();
+    const commentTime = new Date(timestamp);
+    const diffInSeconds = Math.floor((now - commentTime) / 1000);
+
+    if (diffInSeconds < 60) {
+      return "Just now";
+    } else if (diffInSeconds < 3600) {
+      return `${Math.floor(diffInSeconds / 60)}m`;
+    } else if (diffInSeconds < 86400) {
+      return `${Math.floor(diffInSeconds / 3600)}h`;
+    } else {
+      return `${Math.floor(diffInSeconds / 86400)}d`;
     }
   };
 
@@ -39,9 +76,9 @@ export default function CommentPost({ postId }) { // Ensure postId is passed as 
     <>
       <div className="h-auto border-t mt-2 border-gray-600 flex flex-col">
         {/* Comment Input */}
-        <div className="flex items-center mb-2 pt-4 px-8 gap-3">
+        <div className="flex items-center mb-2 pt-4 pb-3 px-8 gap-3">
           <div className="w-10 h-10 rounded-lg overflow-hidden">
-            {user ? (
+            {user?.profile_picture ? (
               <img
                 src={user.profile_picture} // Use the correct URL for the profile picture
                 alt={user.name}
@@ -49,7 +86,7 @@ export default function CommentPost({ postId }) { // Ensure postId is passed as 
               />
             ) : (
               <img
-                src="default-profile.png" // Default image if no user
+                src="default-profile.png"
                 alt="Default Profile"
                 className="w-full h-full object-cover"
               />
@@ -60,56 +97,49 @@ export default function CommentPost({ postId }) { // Ensure postId is passed as 
             type="text"
             placeholder="Add a comment..."
             className="flex-1 py-2 px-3 bg-gray-800 text-white rounded-lg outline-none"
-            onChange={(e) => setCommentContent(e.target.value)} // Update comment content on change
-            value={commentContent} // Bind input value to state
+            onChange={(e) => setCommentContent(e.target.value)}
+            value={commentContent}
           />
           <button
             className="ml-2 bg-teal-700 text-white p-2 px-4 rounded-lg hover:bg-teal-800"
-            onClick={handleCommentSubmit} // Handle comment submission
+            onClick={handleCommentSubmit}
           >
             Post
           </button>
         </div>
 
         {/* Comment Display */}
-        {comments[postId] && comments[postId].map((comment, index) => (
-          <div key={index} className="flex justify-between items-center my-1 px-8 pt-4">
-            <div className="flex gap-2">
-              {/* Profile Picture */}
-              <div className="w-10 h-10 rounded-lg overflow-hidden">
-                {comment.user ? (
-                  <img
-                    src={comment.user.profile_picture} // Use the correct URL for the comment user's profile picture
-                    alt={comment.user.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <img
-                    src="default-profile.png" // Default image if no user
-                    alt="Default Profile"
-                    className="w-full h-full object-cover"
-                  />
-                )}
+        {comments.map((comment) => (
+          <div key={comment.id} className="flex flex-col px-8 py-4 border-t-gray-800 border-t">
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                <div className="w-10 h-10 rounded-lg overflow-hidden">
+                  {comment.profile_picture ? (
+                    <img
+                      src={comment.profile_picture}
+                      alt={comment.user_name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <img
+                      src="default-profile.png"
+                      alt="Default Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+                <div className="flex flex-col text-gray-400 text-sm">
+                  <p className="text-white text-base">{comment.user_name}</p>
+                  <p className="text-sm">{comment.user_id}</p>
+                </div>
               </div>
-              <div className="flex flex-col text-gray-400 text-sm">
-                {comment.user ? (
-                  <>
-                    <p className="text-white text-base">{comment.user.name}</p>
-                    <p className="text-sm">{comment.user.id}</p>
-                  </>
-                ) : (
-                  <p>Loading...</p>
-                )}
+              <div className="text-gray-400 text-sm">
+                <p>{timeAgo(comment.created_at)}</p>
               </div>
             </div>
-            <div className="text-gray-400 text-sm">
-              <p>{new Date(comment.timestamp).toLocaleTimeString()}</p> {/* Display comment timestamp */}
+            <div className="text-white text-sm mt-2 px-12">
+              <p>{comment.content}</p>
             </div>
-          </div>
-        ))}
-        {comments[postId] && comments[postId].map((comment, index) => (
-          <div key={index} className="flex text-justify text-gray-400 mt-1 mb-3 px-20 text-sm">
-            <p className="text-white">{comment.content}</p> {/* Display comment content */}
           </div>
         ))}
       </div>
